@@ -1,0 +1,82 @@
+name: 作業実績を記録する
+description: 1人が1つの工程を1回やった分を、1件として記録します
+title: "実績: "
+labels: ["実績"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        入力すると自動で `data/records.csv` に追記され、集計がやり直されます。
+        書き間違えたときは、CSVを直接なおしても構いません。
+  - type: input
+    id: date
+    attributes:
+      label: 作業日
+      description: "2026-09-18 の形式（2026/09/18 でも受け付けます）"
+      placeholder: "2026-09-18"
+    validations:
+      required: true
+  - type: input
+    id: person
+    attributes:
+      label: 担当者
+      placeholder: "佐藤"
+    validations:
+      required: true
+  - type: input
+    id: target
+    attributes:
+      label: 対象
+      description: "品番・案件など、集計したい単位。standards.csv と同じ表記にしてください"
+      placeholder: "A-102"
+    validations:
+      required: true
+  - type: dropdown
+    id: process
+    attributes:
+      label: 工程
+      options:
+        - 段取り
+        - 加工
+        - 検査
+        - 梱包
+        - その他
+    validations:
+      required: true
+  - type: input
+    id: start
+    attributes:
+      label: 開始時刻
+      placeholder: "09:05"
+    validations:
+      required: true
+  - type: input
+    id: end
+    attributes:
+      label: 終了時刻
+      placeholder: "11:40"
+    validations:
+      required: true
+  - type: input
+    id: pause
+    attributes:
+      label: 中断（分）
+      description: "休憩・手待ち・材料待ち。なければ空のままで構いません"
+      placeholder: "10"
+  - type: input
+    id: quantity
+    attributes:
+      label: 数量（個）
+      description: "段取りのように数量のない工程は空のままで構いません"
+      placeholder: "40"
+  - type: input
+    id: defects
+    attributes:
+      label: 不良（個）
+      placeholder: "1"
+  - type: textarea
+    id: note
+    attributes:
+      label: 備考
+      description: "いつもより時間がかかったときは、理由をひとこと。後の集計でここが効きます"
+      placeholder: "材料待ち15分"

@@ -1,0 +1,38 @@
+name: 集計をやり直す
+
+# data/ の中身を画面から直接編集したときに走る。
+# （Issueからの記録は record.yml の中で集計まで済ませている。
+#   Actionsが push したコミットでは、別のワークフローは起動しない決まりのため）
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+  workflow_dispatch:   # Actionsタブから手で走らせることもできる
+
+permissions:
+  contents: write
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: python scripts/aggregate.py
+
+      - name: 結果が変わっていればコミットする
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "集計結果に変化はありません"
+            exit 0
+          fi
+          git add reports/summary.md
+          git commit -m "集計をやり直した"
+          git push

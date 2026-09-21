@@ -1,0 +1,72 @@
+name: 実績を記録する
+
+# Issueが立てられたら、その中身をCSVに1行足して、集計をやり直す。
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write   # CSVをコミットするため
+  issues: write     # Issueに返信して閉じるため
+
+# 同じ時刻に2件立っても、1件ずつ順番に処理する（CSVの取り合いを防ぐ）
+concurrency:
+  group: records-csv
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Issueの内容をCSVに追記する
+        env:
+          # 本文は環境変数で渡す。run: の中に直接書くと、本文の文字が
+          # コマンドとして実行されてしまう（スクリプトインジェクション）
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: python scripts/issue_to_csv.py
+
+      - name: 集計をやり直す
+        run: python scripts/aggregate.py
+
+      - name: コミットして push する
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "変更がないので、何もコミットしません"
+            exit 0
+          fi
+          git add data/records.csv reports/summary.md
+          git commit -m "実績を記録 (#${ISSUE_NUMBER})"
+          git push
+
+      - name: 記録できたことをIssueに書いて閉じる
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          SUMMARY_URL: ${{ github.server_url }}/${{ github.repository }}/blob/main/reports/summary.md
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --body "記録しました。集計は [reports/summary.md]($SUMMARY_URL) を見てください。"
+          gh issue close "$ISSUE_NUMBER"
+
+      - name: 読み取れなかったことをIssueに書く
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          if [ -f errors.txt ]; then
+            gh issue comment "$ISSUE_NUMBER" --body "$(printf '入力内容を読み取れませんでした。直してから、もう一度Issueを立ててください。\n\n%s' "$(cat errors.txt)")"
+          else
+            gh issue comment "$ISSUE_NUMBER" --body "記録の途中で失敗しました。Actionsタブのログを見てください。"
+          fi
