@@ -7,6 +7,17 @@ Issueに入力すると、CSVに1行たまって、集計が自動でやり直�
 - 結果を見る → [reports/summary.md](reports/summary.md)
 - 生データ → [data/records.csv](data/records.csv)
 
+## 携帯から入力する
+
+GitHubのスマホアプリは、この形式の入力フォーム（YAMLで書いたIssueテンプレート）に
+対応していません。アプリから新規Issueを作ろうとすると、ブラウザに飛ばされます。
+携帯からはブラウザで直接この画面を開くのが確実です。
+
+https://github.com/voyagesept/kousuu-log/issues/new?template=record.yml
+
+ブラウザのメニューから「ホーム画面に追加」しておくと、アイコンを押すだけで
+入力画面が開きます。アプリのほうは、集計を見たり、記録できた通知を受け取るのに使えます。
+
 ## 入れてから出るまで
 
 ```
